@@ -91,6 +91,7 @@ class GCTraceTimeLoggerImpl : public TimespanCallback {
   const LogTargetHandle _out_end;
 
   size_t _heap_usage_before;
+  size_t _majflt_before;
   Ticks  _start;
 
   void log_start(Ticks start);

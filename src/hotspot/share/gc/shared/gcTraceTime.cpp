@@ -31,6 +31,9 @@
 #include "memory/universe.hpp"
 #include "runtime/os.hpp"
 
+#include <sys/resource.h>
+#include <sys/syscall.h>
+
 void GCTraceTimeLoggerImpl::log_start(Ticks start) {
   _start = start;
 
@@ -43,7 +46,13 @@ void GCTraceTimeLoggerImpl::log_start(Ticks start) {
   out.cr();
 
   if (_log_heap_usage) {
+    struct swap_stats {
+      unsigned int majflt;
+      unsigned int majflt_in_region;
+    } stats;
     _heap_usage_before = Universe::heap()->used();
+    if (syscall(452, &stats) == 0)
+      _majflt_before = stats.majflt;
   }
 }
 
@@ -60,10 +69,22 @@ void GCTraceTimeLoggerImpl::log_end(Ticks end) {
 
   if (_heap_usage_before != SIZE_MAX) {
     CollectedHeap* heap = Universe::heap();
+    struct swap_stats {
+      unsigned int majflt;
+      unsigned int majflt_in_region;
+    } stats;
     size_t used_before_m = _heap_usage_before / M;
     size_t used_m = heap->used() / M;
     size_t capacity_m = heap->capacity() / M;
-    out.print(" " SIZE_FORMAT "M->" SIZE_FORMAT "M("  SIZE_FORMAT "M)", used_before_m, used_m, capacity_m);
+    size_t majflt = -1;
+    // syscall 452
+    // int sys_get_swap_stats(struct swap_stats *stats);
+    if (syscall(452, &stats) == 0)
+      majflt = stats.majflt;
+    out.print(" " SIZE_FORMAT "M->" SIZE_FORMAT "M("  SIZE_FORMAT "M) "
+              "majflt(" SIZE_FORMAT "->" SIZE_FORMAT ")",
+              used_before_m, used_m, capacity_m,
+              _majflt_before, majflt);
   }
 
   out.print_cr(" %.3fms", duration_in_ms);
