@@ -714,6 +714,21 @@ void ShenandoahControlThread::service_concurrent_cycle(ShenandoahHeap* heap,
                                                        ShenandoahGeneration* generation,
                                                        GCCause::Cause& cause,
                                                        bool do_old_gc_bootstrap) {
+  const char* msg;
+  if (heap->mode()->is_generational()) {
+    if (heap->cancelled_gc()) {
+      msg = (generation->is_young()) ? "At beginning of Interrupted Concurrent Young GC" :
+                                       "At beginning of Interrupted Concurrent Bootstrap GC";
+    } else {
+      msg = (generation->is_young()) ? "At beginning of Concurrent Young GC" :
+                                       "At beginning of Concurrent Bootstrap GC";
+    }
+  } else {
+    msg = heap->cancelled_gc() ? "At beginning of cancelled GC" :
+                                 "At beginning of GC";
+  }
+  heap->log_heap_status(msg);
+
   ShenandoahConcurrentGC gc(generation, do_old_gc_bootstrap);
   if (gc.collect(cause)) {
     // Cycle is complete
@@ -726,7 +741,7 @@ void ShenandoahControlThread::service_concurrent_cycle(ShenandoahHeap* heap,
     // collection.  Same for global collections.
     _degen_generation = generation;
   }
-  const char* msg;
+
   if (heap->mode()->is_generational()) {
     if (heap->cancelled_gc()) {
       msg = (generation->is_young()) ? "At end of Interrupted Concurrent Young GC" :

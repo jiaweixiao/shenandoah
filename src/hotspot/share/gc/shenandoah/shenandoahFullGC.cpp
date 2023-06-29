@@ -170,6 +170,8 @@ void ShenandoahFullGC::op_full(GCCause::Cause cause) {
   ShenandoahMetricsSnapshot metrics;
   metrics.snap_before();
 
+  heap->log_heap_status("At beginning of Full GC");
+
   // Perform full GC
   do_it(cause);
 
