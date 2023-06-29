@@ -24,6 +24,7 @@
 
 #include "precompiled.hpp"
 #include "gc/parallel/parallelInitLogger.hpp"
+#include "gc/parallel/parallelScavengeHeap.hpp"
 #include "gc/shared/genArguments.hpp"
 #include "gc/shared/gcLogPrecious.hpp"
 
@@ -35,6 +36,13 @@ void ParallelInitLogger::print_heap() {
                        byte_size_in_exact_unit(SpaceAlignment), exact_unit_for_byte_size(SpaceAlignment),
                        byte_size_in_exact_unit(GenAlignment), exact_unit_for_byte_size(GenAlignment),
                        byte_size_in_exact_unit(HeapAlignment), exact_unit_for_byte_size(HeapAlignment));
+  PSYoungGen* young = ParallelScavengeHeap::young_gen();
+  PSOldGen* old = ParallelScavengeHeap::old_gen();
+  log_info_p(gc, init)("Reserved Space:"
+                       " young [" PTR_FORMAT ", " PTR_FORMAT "],"
+                       " old [" PTR_FORMAT ", " PTR_FORMAT "]",
+                       p2i(young->reserved().start()), p2i(young->reserved().end()),
+                       p2i(old->reserved().start()), p2i(old->reserved().end()));
   GCInitLogger::print_heap();
 }
 

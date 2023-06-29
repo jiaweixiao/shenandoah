@@ -56,6 +56,8 @@
 #include "utilities/macros.hpp"
 #include "utilities/vmError.hpp"
 
+#include <sys/syscall.h>
+
 PSYoungGen*  ParallelScavengeHeap::_young_gen = nullptr;
 PSOldGen*    ParallelScavengeHeap::_old_gen = nullptr;
 PSAdaptiveSizePolicy* ParallelScavengeHeap::_size_policy = nullptr;
@@ -126,6 +128,15 @@ jint ParallelScavengeHeap::initialize() {
   if (!PSParallelCompact::initialize()) {
     return JNI_ENOMEM;
   }
+
+  // syscall 451
+  // int sys_reset_swap_stats(void);
+  syscall(451);
+  // syscall 453
+  // int sys_set_majflt_region(unsigned long low, unsigned long high);
+  syscall(453,
+          (uintptr_t)(young_gen()->reserved().start()),
+          (uintptr_t)(young_gen()->reserved().end()));
 
   ParallelInitLogger::print();
 
