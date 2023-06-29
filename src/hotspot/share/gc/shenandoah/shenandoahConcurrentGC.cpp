@@ -529,7 +529,7 @@ void ShenandoahConcurrentGC::entry_evacuate() {
   TraceCollectorStats tcs(heap->monitoring_support()->concurrent_collection_counters());
 
   static const char* msg = "Concurrent evacuation";
-  ShenandoahConcurrentPhase gc_phase(msg, ShenandoahPhaseTimings::conc_evac);
+  ShenandoahConcurrentPhase gc_phase(msg, ShenandoahPhaseTimings::conc_evac, true /* log_heap_usage */);
   EventMark em("%s", msg);
 
   ShenandoahWorkerScope scope(heap->workers(),
