@@ -129,14 +129,22 @@ jint ParallelScavengeHeap::initialize() {
     return JNI_ENOMEM;
   }
 
-  // syscall 451
-  // int sys_reset_swap_stats(void);
+  // reset swap stats
   syscall(451);
-  // syscall 453
-  // int sys_set_majflt_region(unsigned long low, unsigned long high);
-  syscall(453,
-          (uintptr_t)(young_gen()->reserved().start()),
-          (uintptr_t)(young_gen()->reserved().end()));
+
+  // init majflt region bitmap
+  unsigned long base = (uintptr_t)(young_gen()->reserved().start());
+  unsigned long region_number = 1;
+  unsigned long region_size = young_gen()->reserved().byte_size();
+  syscall(453, base, region_number, region_size);
+
+  // set bitmap[0]
+  unsigned int mode = 2;
+  unsigned long region_id = 0;
+  syscall(454, mode, region_id);
+
+  // dump bitmap
+  syscall(454, 999, 0);
 
   ParallelInitLogger::print();
 
