@@ -949,6 +949,16 @@ void ShenandoahHeapRegion::set_affiliation(ShenandoahAffiliation new_affiliation
                   ", watermark: " PTR_FORMAT ", top_bitmap: " PTR_FORMAT,
                   index(), shenandoah_affiliation_name(region_affiliation), shenandoah_affiliation_name(new_affiliation),
                   p2i(top()), p2i(ctx->top_at_mark_start(this)), p2i(_update_watermark), p2i(ctx->top_bitmap(this)));
+
+    // inform young region to kernel swap majflt in region profiler
+    if (heap->mode()->is_generational()) {
+      size_t region_id = this->index();
+      if (region_affiliation == YOUNG_GENERATION) {
+        syscall(454, 1, region_id); // delete region
+      } else if (new_affiliation == YOUNG_GENERATION) {
+        syscall(454, 2, region_id); // insert retion
+      }
+    }
   }
 
 #ifdef ASSERT
