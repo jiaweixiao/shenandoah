@@ -474,14 +474,12 @@ jint ShenandoahHeap::initialize() {
   _control_thread = new ShenandoahControlThread();
   _regulator_thread = new ShenandoahRegulatorThread(_control_thread);
 
-  if (mode()->is_generational()) {
-    // reset swap stats in linux kernel with fastswap
-    syscall(451);
+  // reset swap stats in linux kernel with fastswap
+  syscall(451);
 
-    // init majflt region bitmap
-    unsigned long base = (uintptr_t)(_regions[0]->bottom());
-    syscall(453, base, _num_regions, reg_size_bytes);
-  }
+  // init majflt region bitmap
+  unsigned long base = (uintptr_t)(_regions[0]->bottom());
+  syscall(453, base, _num_regions, reg_size_bytes);
 
   ShenandoahInitLogger::print();
 
