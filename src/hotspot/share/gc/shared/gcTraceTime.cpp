@@ -88,6 +88,24 @@ void GCTraceTimeLoggerImpl::log_end(Ticks end) {
   }
 
   out.print_cr(" %.3fms", duration_in_ms);
+
+  if (_log_heap_usage && strstr(_title, "Pause Full") != nullptr) {
+    // syscall 455
+    // int faulty_page_index(unsigned int mode, unsigned long *indices);
+    unsigned long * indices = (unsigned long *)malloc(2048 * sizeof(unsigned long));
+    if (indices != NULL) {
+      if (syscall(455, 3, indices, 0) == 0) {
+        out.print("faulty page index: ");
+        for (int i = 0; i < 2048; i++) {
+          out.print(SIZE_FORMAT ",", indices[i]);
+        }
+        out.cr();
+      }
+      free(indices);
+    }
+    // reset profile
+    syscall(455, 2, NULL, 0);
+  }
 }
 
 GCTraceCPUTime::GCTraceCPUTime(GCTracer* tracer) :

@@ -1764,7 +1764,13 @@ bool PSParallelCompact::invoke_no_policy(bool maximum_heap_compaction) {
 
     ref_processor()->start_discovery(maximum_heap_compaction);
 
+    // enable profile faulty page index
+    syscall(455, 1, NULL, 2048);
+
     marking_phase(&_gc_tracer);
+
+    // disable profile faulty page index
+    syscall(455, 0, NULL, 0);
 
     bool max_on_system_gc = UseMaximumCompactionOnSystemGC
       && GCCause::is_user_requested_gc(gc_cause);
